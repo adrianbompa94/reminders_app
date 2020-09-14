@@ -38,6 +38,32 @@ run_tests:
 ```
 On the root project location, running command ```make all``` will build an image and run a container based on that image, that will expose the API on 0.0.0.0:5000
 
+Examples:
+```
+curl -X POST \
+  http://0.0.0.0:5000/reminder \
+  -H 'Content-Type: application/json' \
+  -H 'Host: 0.0.0.0:5000' \
+  -H 'User-Agent: PostmanRuntime/7.13.0' \
+  -H 'accept-encoding: gzip, deflate' \
+  -H 'cache-control: no-cache' \
+  -H 'content-length: 48' \
+  -d '{
+	"message":"hello world",
+	"time": "23:19"
+}'
+
+curl -X GET \
+  http://0.0.0.0:5000/reminders \
+  -H 'Content-Type: application/json' \
+  -H 'Host: 0.0.0.0:5000' \
+  -H 'User-Agent: PostmanRuntime/7.13.0' \
+  -H 'accept-encoding: gzip, deflate' \
+  -H 'cache-control: no-cache' \
+  -H 'content-length: 48'
+
+```
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
