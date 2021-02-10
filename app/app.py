@@ -7,8 +7,6 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 
-AWS_ACCESS_KEY = "AKIAJA5ZLTPDNWYMLKCA"
-AWS_SECRET_KEY = "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"
 STREAM_NAME = "reminders"
 
 os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY
