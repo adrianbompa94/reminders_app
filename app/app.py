@@ -22,7 +22,7 @@ reminders = []
 
 DB_CONFIG = {
     "pg_database": "postgres",
-    "pg_host": "reminders.chdx1nxslrp2.us-east-1.rds.amazonaws.com/",
+    "pg_host": "reminders.chdx1nxslrp2.us-east-1.rds.amazonaws.com",
     "pg_password": "Vadim2021!",
     "pg_port": 5432,
     "pg_user": "postgres",
