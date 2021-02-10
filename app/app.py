@@ -20,23 +20,15 @@ kinesis_client = boto3.client("kinesis", region_name="us-east-1")
 
 reminders = []
 
-DB_CONFIG = {
-    "pg_database": "postgres",
-    "pg_host": "reminders.chdx1nxslrp2.us-east-1.rds.amazonaws.com",
-    "pg_password": "Vadim2021!",
-    "pg_port": 5432,
-    "pg_user": "postgres",
-}
-
 
 class PgSql(object):
     def __init__(self):
         self.connection = psycopg2.connect(
-            user=DB_CONFIG.pg_user,
-            password=DB_CONFIG.pg_password,
-            host=DB_CONFIG.pg_host,
-            port=DB_CONFIG.pg_port,
-            database=DB_CONFIG.pg_database,
+            database="postgres",
+            host="reminders.chdx1nxslrp2.us-east-1.rds.amazonaws.com",
+            password="Vadim2021!",
+            port=5432,
+            user="postgres",
         )
 
     def __enter__(self):
