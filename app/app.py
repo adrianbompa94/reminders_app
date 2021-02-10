@@ -1,21 +1,33 @@
 from flask import Flask, request, abort
 from flask_restful import Resource, Api, reqparse
+import boto3
+import json
 import os
 import psycopg2
+from psycopg2.extras import RealDictCursor
 import time
+
+AWS_ACCESS_KEY = "AKIAJA5ZLTPDNWYMLKCA"
+AWS_SECRET_KEY = "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"
+STREAM_NAME = "reminders"
+
+os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY
+os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_KEY
 
 app = Flask(__name__)
 api = Api(app)
+kinesis_client = boto3.client("kinesis", region_name="us-east-1")
 
 reminders = []
 
 DB_CONFIG = {
-    "pg_database": os.environ["PGDATABASE"],
-    "pg_host": os.environ["PGHOST"],
-    "pg_password": os.environ["PGPASSWORD"],
-    "pg_port": os.environ.get("PGPORT", 5432),
-    "pg_user": os.environ["PGUSER"],
+    "pg_database": "postgres",
+    "pg_host": "reminders.chdx1nxslrp2.us-east-1.rds.amazonaws.com/",
+    "pg_password": "Vadim2021!",
+    "pg_port": 5432,
+    "pg_user": "postgres",
 }
+
 
 class PgSql(object):
     def __init__(self):
@@ -34,6 +46,7 @@ class PgSql(object):
     def __exit__(self, *args):
         self.connection.close()
 
+
 class Reminder(Resource):
     def post(self):
         req_data = request.get_json()
@@ -50,43 +63,56 @@ class Reminder(Resource):
         if next(filter(lambda reminder: reminder['message'] == req_data['message'], reminders), None) is not None:
             abort(409, "A reminder with message '{}' already exists.".format(req_data['message']))
         
+        # PostgreSQL write
         with PgSql() as db:
-            cursor = db.cursor()
-            insert_message = """INSERT INTO {table} (message, time) VALUES ('{message}', '{tstamp}')""".format(
+            cursor = db.cursor(cursor_factory=RealDictCursor)
+            insert_message = """INSERT INTO {table} (message, time_at) VALUES ('{message}', '{tstamp}')""".format(
                 message=req_data["message"],
-                table="some-table",
+                table="reminders",
                 tstamp=req_data["time"],
             )
+            print(f"Writing this to database: {insert_message}")
             cursor.execute(insert_message)
             db.commit()
             cursor.close()
-        
+
+        # Kinesis write
+        payload = req_data
+        print(f"Writing this to {STREAM_NAME}: {payload}")
+        put_response = kinesis_client.put_record(
+            Data=json.dumps(payload),
+            PartitionKey=str(int(time.time())),
+            StreamName=STREAM_NAME,
+        )
+
         reminders.append(req_data)
         return req_data
 
+
 class ReminderList(Resource):
     def get(self):
+        # PostgreSQL read
         with PgSql() as db:
-            cursor = db.cursor()
-            get_message = """SELECT message, time FROM {table}""".format(table="some-table")
+            cursor = db.cursor(cursor_factory=RealDictCursor)
+            get_message = """SELECT message, time_at FROM {table}""".format(
+                table="reminders"
+            )
             reminders = cursor.fetchall(get_message)
             db.commit()
             cursor.close()
         return reminders
 
+
 def isTimeFormat(time_string):
     try:
-        time.strptime(time_string, '%H:%M')
+        time.strptime(time_string, "%H:%M")
         return True
     except ValueError:
         return False
 
 
+api.add_resource(ReminderList, "/reminders")
+api.add_resource(Reminder, "/reminder")
 
-api.add_resource(ReminderList, '/reminders')
-api.add_resource(Reminder, '/reminder')
-
-if __name__ == '__main__':
-    app.run(port=5000, host='0.0.0.0')
-
-
+if __name__ == "__main__":
+    app.run(port=5000, host="0.0.0.0")
