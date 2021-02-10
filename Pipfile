@@ -8,7 +8,7 @@ pytest = "*"
 Flask = "*"
 Flask-RESTful = "*"
 boto3 = "*"
-psycopg2 = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 
