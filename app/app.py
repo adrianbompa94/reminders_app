@@ -86,10 +86,11 @@ class ReminderList(Resource):
         # PostgreSQL read
         with PgSql() as db:
             cursor = db.cursor(cursor_factory=RealDictCursor)
-            get_message = """SELECT message, time_at FROM {table}""".format(
+            get_message = """SELECT * FROM {table}""".format(
                 table="reminders"
             )
-            reminders = cursor.fetchall(get_message)
+            cursor.execute(get_message)
+            reminders = cursor.fetchall()
             db.commit()
             cursor.close()
         return reminders
